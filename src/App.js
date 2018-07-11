@@ -11,7 +11,8 @@ class App extends Component {
 		}
 
 		this.tableHeaders = ['Identifier', 'Product Name', 'Rating', 'Price']
-		this.sortedTypes = []
+		this.filteredTypes = []
+		this.sortedBy = ''
 	}
 
 	componentWillMount() {
@@ -19,13 +20,13 @@ class App extends Component {
 			items: data
 		})
 		const uniqueTypes = new Set(data.map(item => item.type))
-		this.sortedTypes = Array.from(uniqueTypes)
+		this.filteredTypes = Array.from(uniqueTypes)
 	}
 
 	render() {
 		return (
-			<Table products={this.state.items} headers={this.tableHeaders} filters={this.sortedTypes}
-				   onFilteringChange={e => this.filteringOut(e)}/>
+			<Table products={this.state.items} headers={this.tableHeaders} filters={this.filteredTypes}
+				   onFilteringChange={filters => this.filteringOut(filters)} onSortingChange={e => this.sortingOut(e)}/>
 		)
 	}
 
@@ -46,6 +47,25 @@ class App extends Component {
 
 		this.setState({items: newFilters})
 	}
+
+	sortingOut(event) {
+		// const {sorting} = event.target.dataset
+		this.sortedBy = event.target.dataset.sorting
+		let sortedItems=[]
+		if (this.sortedBy === 'Product Name') {
+			sortedItems = this.state.items.sort((item1, item2) => item1.name.localeCompare(item2.name))
+		}
+		if (this.sortedBy === 'Rating') {
+			sortedItems = this.state.items.sort((item1, item2) => item2.rating - item1.rating)
+		}
+		if (this.sortedBy === 'Price') {
+			const validatePrice = (price) => {
+				return price.replace(/[^0-9]/, '')
+			}
+			sortedItems = this.state.items.sort((item1, item2) => validatePrice(item2.price) - validatePrice(item1.price))
+		}
+		this.setState({items: sortedItems})
+	}
 }
 
 class Table extends Component {
@@ -57,13 +77,16 @@ class Table extends Component {
 	render() {
 		return (
 			<main>
-				<table>
-					<TableHeader headers={this.props.headers}/>
+				<table className="table">
+					<TableHeader headers={this.props.headers}
+								 onSortingChange={this.props.onSortingChange} />
 					<tbody>
 					<TableRow products={this.props.products}/>
 					</tbody>
 				</table>
-				<Filter filters={this.props.filters} onFilteringChange={this.props.onFilteringChange}/>
+				<Filter filters={this.props.filters}
+						onFilteringChange={this.props.onFilteringChange}
+						onSortingChange={this.props.onSortingChange}/>
 			</main>
 		)
 	}
@@ -71,17 +94,26 @@ class Table extends Component {
 
 class TableHeader extends Component {
 
+	constructor() {
+		super()
+
+	}
+
 	render() {
 		return (
 			<thead>
 			<tr>
 				{
 					this.props.headers.map(tHeader =>
-						<th key={tHeader}>{tHeader}</th>)
+						<th key={tHeader} data-sorting={tHeader} onClick={e => this.handleClick(e)}>{tHeader}</th>)
 				}
 			</tr>
 			</thead>
 		)
+	}
+
+	handleClick(event) {
+		this.props.onSortingChange(event)
 	}
 }
 
@@ -90,7 +122,7 @@ class TableRow extends Component {
 		return (
 			Object.values(this.props.products).map(product =>
 				<tr key={product.id}>
-					<td><input type="checkbox"/></td>
+					<td><input type="checkbox" className=""/></td>
 					<td>{product.name}</td>
 					<td>{product.rating}</td>
 					<td>{product.price}</td>
@@ -110,21 +142,25 @@ class Filter extends Component {
 		props.filters.forEach(filter => {
 			this.state[filter] = true;
 		});
-
 	}
 
 	render() {
 		return (
-			<div>
+			<div className="filter">
 				{
 					this.props.filters.map(item =>
-						<label key={item}>
+						<div className="custom-control custom-checkbox">
 							<input type="checkbox"
+								   className="custom-control-input"
 								   name={item}
+								   id={item}
 								   checked={this.state[item]}
-								   onChange={() => this.handleChange(item)}/>
-							{item}
-						</label>
+								   onChange={() => this.handleChange(item)} />
+
+							<label key={item} className="custom-control-label" for={item}>
+								{item}
+							</label>
+						</div>
 					)
 				}
 			</div>

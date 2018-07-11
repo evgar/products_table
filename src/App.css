@@ -1,3 +1,9 @@
 label {
   text-transform:capitalize;
 }
+
+.filter {
+	position: fixed;
+	top: 580px;
+	left: 150px;
+}
