@@ -1,178 +1,94 @@
-import React, {Component} from 'react'
-import data from './data'
-import './App.css'
+import React, { Component } from "react";
+import data from "./data";
+import Table from './Table';
+import "./App.css";
 
 class App extends Component {
 	constructor() {
-		super()
+		super();
+		this.items = data;
+
+		const uniqueTypes = new Set(data.map(item => item.type));
+		this.filteredTypes = Array.from(uniqueTypes);
 
 		this.state = {
-			items: []
-		}
+			activeFilters: ["phone", "tablet", "notebook"],
+			sortingType: "ASC",
+			sortColumn: ""
+		};
 
-		this.tableHeaders = ['Identifier', 'Product Name', 'Rating', 'Price']
-		this.filteredTypes = []
-		this.sortedBy = ''
+		this.tableHeaders = ["", "Product Name", "Rating", "Price"];
 	}
 
-	componentWillMount() {
-		this.setState({
-			items: data
-		})
-		const uniqueTypes = new Set(data.map(item => item.type))
-		this.filteredTypes = Array.from(uniqueTypes)
+	prepareData() {
+		const { activeFilters, sortColumn, sortingType } = this.state;
+		let preparedData = this.items;
+
+		if (activeFilters.length) {
+			preparedData = this.items.filter(item =>
+				activeFilters.includes(item.type)
+			);
+		} else {
+			preparedData = [];
+		}
+
+		if (sortColumn) {
+			if (sortColumn === "Product Name") {
+				preparedData.sort((item1, item2) =>
+					item1.name.localeCompare(item2.name)
+				);
+			}
+			if (sortColumn === "Rating") {
+				preparedData.sort((item1, item2) => item2.rating - item1.rating);
+			}
+			if (sortColumn === "Price") {
+				const validatePrice = price => {
+					return price.replace(/[^0-9]/, "");
+				};
+				preparedData.sort(
+					(item1, item2) =>
+						validatePrice(item2.price) - validatePrice(item1.price)
+				);
+			}
+		}
+		if (sortingType === "DESC") {
+			preparedData.reverse();
+		}
+		return preparedData;
 	}
 
 	render() {
+		const data = this.prepareData();
 		return (
-			<Table products={this.state.items} headers={this.tableHeaders} filters={this.filteredTypes}
-				   onFilteringChange={filters => this.filteringOut(filters)} onSortingChange={e => this.sortingOut(e)}/>
-		)
+			<Table
+				products={data}
+				headers={this.tableHeaders}
+				filters={this.filteredTypes}
+				onFilteringChange={filters => this.filteringOut(filters)}
+				onSortingChange={e => this.setSortingType(e)}
+			/>
+		);
 	}
 
 	filteringOut(filters) {
-		function getActiveFilters(filters) {
-			const activeFilters = []
-			for (let filter in filters) {
-				if (filters[filter]) {
-					activeFilters.push(filter)
-				}
+		const activeFilters = [];
+		for (let filter in filters) {
+			if (filters[filter]) {
+				activeFilters.push(filter);
 			}
-			return activeFilters
+		}
+		this.setState({ activeFilters });
+	}
+
+	setSortingType(event) {
+		const { sorting } = event.target.dataset;
+		if (sorting === this.state.sortColumn) {
+			const sortingType = this.state.sortingType === "ASC" ? "DESC" : "ASC";
+			this.setState({ sortingType });
 		}
 
-		const newFilters = data.filter(item =>
-			getActiveFilters(filters).includes(item.type)
-		)
-
-		this.setState({items: newFilters})
-	}
-
-	sortingOut(event) {
-		// const {sorting} = event.target.dataset
-		this.sortedBy = event.target.dataset.sorting
-		let sortedItems=[]
-		if (this.sortedBy === 'Product Name') {
-			sortedItems = this.state.items.sort((item1, item2) => item1.name.localeCompare(item2.name))
-		}
-		if (this.sortedBy === 'Rating') {
-			sortedItems = this.state.items.sort((item1, item2) => item2.rating - item1.rating)
-		}
-		if (this.sortedBy === 'Price') {
-			const validatePrice = (price) => {
-				return price.replace(/[^0-9]/, '')
-			}
-			sortedItems = this.state.items.sort((item1, item2) => validatePrice(item2.price) - validatePrice(item1.price))
-		}
-		this.setState({items: sortedItems})
+		this.setState({ sortColumn: sorting });
 	}
 }
 
-class Table extends Component {
-	constructor() {
-		super()
-
-	}
-
-	render() {
-		return (
-			<main>
-				<table className="table">
-					<TableHeader headers={this.props.headers}
-								 onSortingChange={this.props.onSortingChange} />
-					<tbody>
-					<TableRow products={this.props.products}/>
-					</tbody>
-				</table>
-				<Filter filters={this.props.filters}
-						onFilteringChange={this.props.onFilteringChange}
-						onSortingChange={this.props.onSortingChange}/>
-			</main>
-		)
-	}
-}
-
-class TableHeader extends Component {
-
-	constructor() {
-		super()
-
-	}
-
-	render() {
-		return (
-			<thead>
-			<tr>
-				{
-					this.props.headers.map(tHeader =>
-						<th key={tHeader} data-sorting={tHeader} onClick={e => this.handleClick(e)}>{tHeader}</th>)
-				}
-			</tr>
-			</thead>
-		)
-	}
-
-	handleClick(event) {
-		this.props.onSortingChange(event)
-	}
-}
-
-class TableRow extends Component {
-	render() {
-		return (
-			Object.values(this.props.products).map(product =>
-				<tr key={product.id}>
-					<td><input type="checkbox" className=""/></td>
-					<td>{product.name}</td>
-					<td>{product.rating}</td>
-					<td>{product.price}</td>
-				</tr>
-			)
-		)
-	}
-}
-
-class Filter extends Component {
-
-	constructor(props) {
-		super(props);
-
-		this.state = {};
-
-		props.filters.forEach(filter => {
-			this.state[filter] = true;
-		});
-	}
-
-	render() {
-		return (
-			<div className="filter">
-				{
-					this.props.filters.map(item =>
-						<div className="custom-control custom-checkbox">
-							<input type="checkbox"
-								   className="custom-control-input"
-								   name={item}
-								   id={item}
-								   checked={this.state[item]}
-								   onChange={() => this.handleChange(item)} />
-
-							<label key={item} className="custom-control-label" for={item}>
-								{item}
-							</label>
-						</div>
-					)
-				}
-			</div>
-		)
-	}
-
-	handleChange(item) {
-		this.setState({[item]: !this.state[item]},
-			() => this.props.onFilteringChange(this.state)
-		);
-	}
-}
-
-
-export default App
+export default App;

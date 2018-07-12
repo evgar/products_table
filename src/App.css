@@ -1,9 +1,24 @@
-label {
-  text-transform:capitalize;
+.filter {
+	padding: 40px;
+}
+.main {
+	display: flex;
+	flex-direction: row-reverse;
 }
 
-.filter {
-	position: fixed;
-	top: 580px;
-	left: 150px;
+.table {
+	margin: 20px;
+}
+
+.filter__label:before {
+	background-color: #a0d167 !important;
+}
+
+.filter__label {
+	cursor: pointer;
+	text-transform: capitalize;
+}
+
+.thead__header {
+	cursor: pointer;
 }

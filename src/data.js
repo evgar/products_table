@@ -49,7 +49,7 @@ const data = [
 	{
 		id: 8,
 		type: "notebook",
-		name: "lenovo",
+		name: "Lenovo",
 		price: "$600",
 		rating: 3
 	}, {
