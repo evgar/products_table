@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 
 class TableHeader extends Component {
+
 	render() {
 		return (
 			<thead className="thead">
@@ -8,17 +9,16 @@ class TableHeader extends Component {
 				{this.props.headers.map((tHeader, i) => {
 					if (i === 0) {
 						return (
-							<th>
+							<th key={tHeader}>
 								<i className="fa fa-check-square fa-lg" aria-hidden="true" />
 							</th>
-						);
+						)
 					}
 					return (
 						<th
 							className="thead__header"
 							key={tHeader}
-							data-sorting={tHeader}
-							onClick={e => this.handleClick(e)}
+							onClick={() => this.handleClick(tHeader)}
 						>
 							{tHeader}
 						</th>

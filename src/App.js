@@ -9,28 +9,25 @@ class App extends Component {
 		this.items = data;
 
 		const uniqueTypes = new Set(data.map(item => item.type));
-		this.filteredTypes = Array.from(uniqueTypes);
+		this.filteredTypes = [...uniqueTypes];
 
 		this.state = {
-			activeFilters: ["phone", "tablet", "notebook"],
+			activeFilters: [...uniqueTypes],
 			sortingType: "ASC",
 			sortColumn: ""
 		};
 
-		this.tableHeaders = ["", "Product Name", "Rating", "Price"];
+		this.setSortingType = this.setSortingType.bind(this)
+		this.filteringOut = this.filteringOut.bind(this)
 	}
 
 	prepareData() {
 		const { activeFilters, sortColumn, sortingType } = this.state;
 		let preparedData = this.items;
 
-		if (activeFilters.length) {
-			preparedData = this.items.filter(item =>
-				activeFilters.includes(item.type)
-			);
-		} else {
-			preparedData = [];
-		}
+		preparedData = this.items.filter(item =>
+			activeFilters.includes(item.type)
+		);
 
 		if (sortColumn) {
 			if (sortColumn === "Product Name") {
@@ -59,19 +56,20 @@ class App extends Component {
 
 	render() {
 		const data = this.prepareData();
+
 		return (
 			<Table
 				products={data}
-				headers={this.tableHeaders}
 				filters={this.filteredTypes}
-				onFilteringChange={filters => this.filteringOut(filters)}
-				onSortingChange={e => this.setSortingType(e)}
+				onFilteringChange={this.filteringOut}
+				onSortingChange={this.setSortingType}
 			/>
 		);
 	}
 
 	filteringOut(filters) {
 		const activeFilters = [];
+
 		for (let filter in filters) {
 			if (filters[filter]) {
 				activeFilters.push(filter);
@@ -80,8 +78,7 @@ class App extends Component {
 		this.setState({ activeFilters });
 	}
 
-	setSortingType(event) {
-		const { sorting } = event.target.dataset;
+	setSortingType(sorting) {
 		if (sorting === this.state.sortColumn) {
 			const sortingType = this.state.sortingType === "ASC" ? "DESC" : "ASC";
 			this.setState({ sortingType });
